@@ -1,6 +1,4 @@
-#!/usr/bin/python3
-
-# By: Aissa Ouboukioud
+#!/usr/bin/env python3
 
 from ipaddress import IPv4Network
 from IPy import IP
@@ -16,6 +14,8 @@ parser.add_argument('--subnetworks', nargs="*", type=int, help="A list of number
 parser.add_argument('--subnet-technique', choices=['VLSM', 'FLSM'], help="Use the VLSM technique to subnite the network")
 parser.add_argument('--subnet-info', action="store_true", help="Show Info section for each subnetwork")
 parser.add_argument('--available', action="store_true", help="Show the available Networks after subnetting")
+parser.add_argument('-o', '--output', action="store_true", help="Save output to a csv file")
+parser.add_argument('-on', '--output-name', help="Save csv file with custom file name (default: subnitting_CIDR.csv)")
 
 args = parser.parse_args()
 
@@ -56,50 +56,53 @@ q = []
 @section_legend("VLSM Subnetting")
 def subnet_vlsm(network, subnetworks):
     global q
-    q.append(network)
-    ii = 1
-    for i in range(len(subnetworks)):
-        snet = subnetworks.pop()
+    q.append(network.subnets(new_prefix=network.prefixlen))
+    i = 1
+    while subnetworks:
+        snet = subnetworks[-1]+2
         snet_prefix_len = 32 - (math.ceil(math.log(snet, 2)))
-        new_snet = q.pop(0).subnets(new_prefix=snet_prefix_len)
-        j = 0
-        insert_pos = 0
-        for nsnet in new_snet:
-            if j == 0:
-                print(f"{ii:2d}", end=") ")
-                cprint(f"{str(nsnet):17s}", "cyan", attrs=["bold"], end=" ")
-                cprint(f"({snet-2} Hosts)", "green", attrs=["bold"])
-                if args.subnet_info:
-                    info(nsnet, prefix_text="\t| ")
-                ii += 1
-                j += 1
-            else:
-                q.insert(insert_pos, nsnet)
-                insert_pos += 1
-        else:
-            j = 0
-            insert_pos = 0
+        try:
+            new_snet = next(q[0])
+        except StopIteration:
+            q.pop(0)
+            continue
+        except IndexError:
+            cprint(f"\n[!!] The network {str(network)} can't cover all the subetworks\n     these networks are not covered {str(subnetworks)}\n", "red", attrs=["bold"])
+            break
+        subnetworks.pop()
+        q.insert(0, new_snet.subnets(new_prefix=snet_prefix_len))
+        new_snet = next(q[0])
+        print(f"{i:2d}", end=") ")
+        cprint(f"{str(new_snet):17s}", "cyan", attrs=["bold"], end=" ")
+        cprint(f"({snet-2} Hosts)", "green", attrs=["bold"])
+        if args.subnet_info:
+            info(new_snet, prefix_text="\t| ")
+        i += 1    
 
 
 @section_legend("FLSM Subnetting")
 def subnet_flsm(network, subnetworks):
     global q
-    large_net_hosts = int(max(subnetworks))
+    large_net_hosts = subnetworks[-1]+2
     large_prefix_len = 32 - (math.ceil(math.log(large_net_hosts, 2)))
-    snets = [sn for sn in network.subnets(new_prefix=large_prefix_len)]
+    q.append(network.subnets(new_prefix=large_prefix_len))
     i = 1
-    for j in range(len(subnetworks)):
-        sn = snets.pop(0)
+    while subnetworks:
+        try:
+            sn = next(q[0])
+        except:
+            q.pop()
+            cprint(f"\n[!!] The network {str(network)} can't cover all the subetworks\n     these networks are not covered {str(subnetworks)}\n", "red", attrs=["bold"])
+            break
+        snet = subnetworks.pop()
         print(f"{i:2d}", end=") ")
-        cprint(sn, "cyan", attrs=["bold"])
+        cprint(f"{str(sn):17s}", "cyan", attrs=["bold"], end=" ")
+        cprint(f"({snet} Hosts)", "green", attrs=["bold"])
         if args.subnet_info:
             info(sn, prefix_text="\t| ")
         i += 1
-    if args.available:
-        for sn in snets:
-            q.append(sn)
 
-        
+
 @section_legend("Availble Networks")
 def available():
     global q
@@ -107,11 +110,30 @@ def available():
         print("No available Networks")
     else:
         i = 1 
-        for sn in q:
+        while q:
+            try:
+                sn = next(q[0])
+            except StopIteration:
+                q.pop(0)
+                continue
             print(f"{i:2d}", end=") ")
-            cprint(f"{str(sn):17s}", "cyan", attrs=["bold"], end=" ")
-            cprint("(Available)", "green", attrs=["bold"])
+            cprint(f"{str(sn):17s}", "cyan", attrs=["bold"])
             i += 1
+
+#def available():
+#    global q
+#    if not q:
+#        print("No available Networks")
+#        return
+#    i = 1
+#    supernet = None
+#    while q:
+#        try:
+#            sn = next(q[0])
+#        except StopIteration:
+#            q.pop(0)
+#            continue
+        
 
 
 def main():
@@ -128,9 +150,8 @@ def main():
         contains(net, contains_ips)
     if args.subnetworks != None and args.subnet_technique != None:
         subnets = args.subnetworks
-        subnets = [x+2 for x in subnets]
         subnets.sort()
-        if args.subnet_technique == "FLSM":
+        if args.subnet_technique.upper() == "FLSM":
             subnet_flsm(net, subnets)
         else:
             subnet_vlsm(net, subnets)
