@@ -7,17 +7,18 @@ import argparse
 import math
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cidr', required=True, help="The CIDR notation of a network")
-parser.add_argument('--network-info', action="store_true", help="Show the Info section of the network entered with CIDR option")
-parser.add_argument('--contains', nargs="*", help="An IP address to check if it is within the network or not")
-parser.add_argument('--subnetworks', nargs="*", type=int, help="A list of numbers of hosts in each subnetwork (Enter the value separated by space)")
-parser.add_argument('--subnet-technique', choices=['VLSM', 'FLSM'], help="Use the VLSM technique to subnite the network")
+parser.add_argument('--network', dest="cidr", required=True, help="The CIDR notation of a network")
+parser.add_argument('--network-info', action="store_true", help="Show the Info section of the network entered with (--network) option")
+parser.add_argument('--contains', nargs="*", help="A list of IP address to check if they belong tho the network or not (separate the ip addressed with space)")
+parser.add_argument('--subnetworks', nargs="*", type=int, help="A list of numbers of hosts in each subnetwork (Enter the values separated by space)")
+parser.add_argument('--subnet-technique', choices=['VLSM', 'FLSM'], help="Choose the technique to use when subnetting the network either VLSM or FLSM (required when using the --subnetworks option)")
 parser.add_argument('--subnet-info', action="store_true", help="Show Info section for each subnetwork")
 parser.add_argument('--available', action="store_true", help="Show the available Networks after subnetting")
-parser.add_argument('-o', '--output', action="store_true", help="Save output to a csv file")
-parser.add_argument('-on', '--output-name', help="Save csv file with custom file name (default: subnitting_CIDR.csv)")
+#parser.add_argument('-o', '--output', action="store_true", help="Save output to a csv file")
+#parser.add_argument('-on', '--output-name', help="Save csv file with custom file name (default: subnitting_CIDR.csv)")
 
 args = parser.parse_args()
+
 
 def section_legend(legend):
     def _outer_wrapper(func):
@@ -50,7 +51,9 @@ def contains(network, ips):
             cprint(f"{ip:13s}", "red", attrs=["bold"], end=" ")
             print(f"Doesn't Belongs to the network {network}")
 
+
 q = []
+sub_networks = []
 
 
 @section_legend("VLSM Subnetting")
@@ -72,6 +75,7 @@ def subnet_vlsm(network, subnetworks):
         subnetworks.pop()
         q.insert(0, new_snet.subnets(new_prefix=snet_prefix_len))
         new_snet = next(q[0])
+        sub_networks.append(str(new_snet))
         print(f"{i:2d}", end=") ")
         cprint(f"{str(new_snet):17s}", "cyan", attrs=["bold"], end=" ")
         cprint(f"({snet-2} Hosts)", "green", attrs=["bold"])
@@ -95,6 +99,7 @@ def subnet_flsm(network, subnetworks):
             cprint(f"\n[!!] The network {str(network)} can't cover all the subetworks\n     these networks are not covered {str(subnetworks)}\n", "red", attrs=["bold"])
             break
         snet = subnetworks.pop()
+        sub_networks.append(str(sn))
         print(f"{i:2d}", end=") ")
         cprint(f"{str(sn):17s}", "cyan", attrs=["bold"], end=" ")
         cprint(f"({snet} Hosts)", "green", attrs=["bold"])
@@ -104,36 +109,20 @@ def subnet_flsm(network, subnetworks):
 
 
 @section_legend("Availble Networks")
-def available():
+def available(network):
     global q
     if not q:
         print("No available Networks")
     else:
-        i = 1 
-        while q:
-            try:
-                sn = next(q[0])
-            except StopIteration:
-                q.pop(0)
-                continue
-            print(f"{i:2d}", end=") ")
-            cprint(f"{str(sn):17s}", "cyan", attrs=["bold"])
-            i += 1
+        i = 1
+        net = IP(network, make_net=True)
+        for snet in sub_networks:
+            net -= IP(snet)
 
-#def available():
-#    global q
-#    if not q:
-#        print("No available Networks")
-#        return
-#    i = 1
-#    supernet = None
-#    while q:
-#        try:
-#            sn = next(q[0])
-#        except StopIteration:
-#            q.pop(0)
-#            continue
-        
+        for avnet in net:
+            print(f"{i:2d}", end=") ")
+            cprint(f"{str(avnet):17s}", "cyan", attrs=["bold"])
+            i += 1
 
 
 def main():
@@ -156,7 +145,7 @@ def main():
         else:
             subnet_vlsm(net, subnets)
     if args.available:
-        available()
+        available(cidr)
 
 
 if __name__ == "__main__":
