@@ -72,4 +72,11 @@ you can also show information about each subnetwork using the **--subnet-info** 
 
 ### Available Section
 
-This section shows the available network that are still available after subnitting (if any) and you can view this section by using the flag **--available**
+This section shows the available network that are still available after subnitting (if any) and you can view this section by using the **--available** flag.
+
+![6](https://user-images.githubusercontent.com/70541804/118567119-24b39800-b76d-11eb-9664-dd2612056067.JPG)
+
+## Saving the output to a file
+
+You can save the output to a csv file with the **-o** or **--output** flag.
+The output is save to a csv file with the name **YYMMDD_hhmmss_subnet-technique_network_networkmask.csv** in the same direcory where you run the program, but you can specify a custom name using the **-on** or **--output-name** option and pass it the name you wanna save the output as (make sure to add the .csv extension to the end of the filename)
