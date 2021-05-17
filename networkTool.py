@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# By: Aissa Ouboukioud
+
 from ipaddress import IPv4Network
 from functools import wraps
 from IPy import IP
@@ -132,7 +134,7 @@ def subnet_flsm(network, subnetworks):
         if args.subnet_info:
             info(sn, prefix_text="\t| ")
         if args.output:
-            subnetworks_dict.append(getStringInfo(snet-2, new_snet))
+            subnetworks_dict.append(getStringInfo(snet, sn))
         i += 1
 
 
@@ -153,18 +155,18 @@ def available(network):
             i += 1
 
 
-def getfile_name():
-    return f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{args.subnet_technique}_{args.cidr.split('/')[0]}.csv"
+def getfile_name(netmask):
+    return f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{args.subnet_technique}_{args.cidr.split('/')[0]}_{netmask}.csv"
 
 
-def save_output(file_name=None):
+def save_output(netmask, file_name=None):
     if file_name is None:
-        file_name = getfile_name()
+        file_name = getfile_name(netmask)
     with open(file_name, "w") as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(['Number of hosts', 'Network', 'Network mask', 'IP type', 'Network ID', 'Broadcast IP', 'Usable IPs', 'First IP', 'Last IP'])
         for snet in subnetworks_dict:
-            csv.writer.writerow(snet.split(','))
+            csv_writer.writerow(snet.split(','))
     
 
 def main():
@@ -195,7 +197,7 @@ def main():
         if args.available:
             available(cidr)
         if args.output:
-            save_output(args.output_name)
+            save_output(net.netmask, args.output_name)
 
 
 if __name__ == "__main__":
