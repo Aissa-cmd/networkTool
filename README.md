@@ -9,10 +9,7 @@ For the program to work you should have python3.6 or above installed, if you are
 2. termcolor
 
 you can install these packages using the following command
-```
-pip3 install -r requirements.txt
-```
-or
+
 ```
 pip3 install IPy
 pip3 install termcolor
