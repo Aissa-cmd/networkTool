@@ -44,7 +44,7 @@ def info(cidr,  prefix_text="", color="white"):
     cprint(f"{prefix_text}IP type         : {IP(str(cidr), make_net=True).iptype()}", color, attrs=["bold"])
     cprint(f"{prefix_text}Network ID      : {cidr[0]}", color, attrs=["bold"])
     cprint(f"{prefix_text}Broadcast IP    : {cidr.broadcast_address}", color, attrs=["bold"])
-    cprint(f"{prefix_text}Usable IP addrs : {cidr.num_addresses-2}", color, attrs=["bold"])
+    cprint(f"{prefix_text}Usable IP addrs : {cidr.num_addresses-2:,}", color, attrs=["bold"])
     cprint(f"{prefix_text}Range of IPs    : {cidr[1]}-{cidr[-2]}", color, attrs=["bold"])
 
 
