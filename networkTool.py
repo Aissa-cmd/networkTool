@@ -13,13 +13,13 @@ from datetime import datetime
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--network', dest="cidr", required=True, help="The CIDR notation of a network")
-parser.add_argument('--network-info', action="store_true", help="Show the Info section of the network entered with (--network) option")
-parser.add_argument('--contains', nargs="*", help="A list of IP address to check if they belong tho the network or not (separate the ip addressed with space)")
-parser.add_argument('--subnetworks', nargs="*", type=int, help="A list of numbers of hosts in each subnetwork (Enter the values separated by space)")
-parser.add_argument('--subnet-technique', choices=['VLSM', 'FLSM'], help="Choose the technique to use when subnetting the network either VLSM or FLSM (required when using the --subnetworks option)")
-parser.add_argument('--subnet-info', action="store_true", help="Show Info section for each subnetwork")
-parser.add_argument('--available', action="store_true", help="Show the available Networks after subnetting")
+parser.add_argument('-n', '--network', dest="cidr", required=True, help="The CIDR notation of a network")
+parser.add_argument('-ni', '--network-info', action="store_true", help="Show the Info section of the network entered with (--network) option")
+parser.add_argument('-c', '--contains', nargs="*", help="A list of IP address to check if they belong tho the network or not (separate the ip addressed with space)")
+parser.add_argument('-s','--subnetworks', nargs="*", type=int, help="A list of numbers of hosts in each subnetwork (Enter the values separated by space)")
+parser.add_argument('-st', '--subnet-technique', choices=['VLSM', 'FLSM', 'vlsm', 'flsm'], default="VLSM", help="Choose the technique to use when subnetting the network either VLSM or FLSM (default: VLSM)")
+parser.add_argument('-si', '--subnet-info', action="store_true", help="Show Info section for each subnetwork")
+parser.add_argument('-a', '--available', action="store_true", help="Show the available Networks after subnetting")
 parser.add_argument('-o', '--output', action="store_true", help="Save output to a csv file")
 parser.add_argument('-on', '--output-name', help="Save csv file with custom file name (default: YYMMDD_HHMMSS_subnet_technique_network.csv)")
 
